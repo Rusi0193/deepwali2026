@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diwali Ambient Clock</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    .font-festive { font-family: 'Great Vibes', cursive; }
+    .font-clock { font-family: 'Cinzel', serif; }
+    .fade-ui { transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    .watermark {
+      position: fixed; bottom: 12px; right: 18px; z-index: 25;
+      font-size: 0.75rem; color: rgba(255, 255, 255, 0.4);
+      font-family: 'Poppins', sans-serif; letter-spacing: 0.05em;
+      pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+    .diya-flame {
+      animation: flicker 1.8s infinite ease-in-out alternate;
+      transform-origin: bottom center;
+    }
+    @keyframes flicker {
+      0% { transform: scale(1) rotate(-1deg); opacity: 0.95; }
+      20% { transform: scale(1.05) rotate(2deg); opacity: 1; }
+      40% { transform: scale(0.98) rotate(-2deg); opacity: 0.9; }
+      60% { transform: scale(1.03) rotate(1deg); opacity: 1; }
+      80% { transform: scale(0.96) rotate(-1deg); opacity: 0.88; }
+      100% { transform: scale(1.02) rotate(1.5deg); opacity: 0.98; }
+    }
+    .bg-slide { transition: opacity 1.5s ease-in-out; }
+  </style>
+</head>
+<body class="relative w-screen h-screen flex flex-col justify-between items-center text-white bg-black overflow-hidden select-none font-sans">
+
+  <!-- PASSCODE LOCK SCREEN -->
+  <div id="lockScreen" class="fixed inset-0 z-50 bg-neutral-950 flex flex-col items-center justify-center p-4">
+    <div class="bg-neutral-900/90 border border-amber-500/30 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center backdrop-blur-md">
+      <div class="w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+        <svg viewBox="0 0 100 100" class="w-12 h-12">
+          <path d="M50 15 Q55 35 65 45 Q50 40 50 15 Z" fill="#F59E0B" class="diya-flame"/>
+          <path d="M20 55 Q50 85 80 55 Q65 75 35 75 Z" fill="#D97706"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-festive text-amber-400 mb-1">Happy Diwali</h1>
+      <p class="text-neutral-400 text-xs mb-6">Enter Access Code to View Screen</p>
+
+      <div class="flex justify-center gap-3 mb-6">
+        <div id="dot0" class="w-4 h-4 rounded-full border-2 border-amber-500/50"></div>
+        <div id="dot1" class="w-4 h-4 rounded-full border-2 border-amber-500/50"></div>
+        <div id="dot2" class="w-4 h-4 rounded-full border-2 border-amber-500/50"></div>
+        <div id="dot3" class="w-4 h-4 rounded-full border-2 border-amber-500/50"></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 max-w-[220px] mx-auto">
+        <button onclick="pressPin('1')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">1</button>
+        <button onclick="pressPin('2')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">2</button>
+        <button onclick="pressPin('3')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">3</button>
+        <button onclick="pressPin('4')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">4</button>
+        <button onclick="pressPin('5')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">5</button>
+        <button onclick="pressPin('6')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">6</button>
+        <button onclick="pressPin('7')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">7</button>
+        <button onclick="pressPin('8')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">8</button>
+        <button onclick="pressPin('9')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">9</button>
+        <button onclick="clearPin()" class="h-12 text-sm font-semibold bg-neutral-800/60 hover:bg-neutral-700 text-red-400 rounded-xl transition">C</button>
+        <button onclick="pressPin('0')" class="h-12 text-xl font-bold bg-neutral-800 hover:bg-neutral-700 active:bg-amber-600 rounded-xl transition">0</button>
+        <button onclick="checkPin()" class="h-12 text-sm font-semibold bg-amber-600 hover:bg-amber-500 text-white rounded-xl transition">OK</button>
+      </div>
+      <p id="errorMsg" class="text-red-400 text-xs mt-4 opacity-0 transition-opacity">Incorrect Code. Try again.</p>
+    </div>
+  </div>
+
+  <!-- BACKGROUND SLIDESHOW CONTAINERS -->
+  <div id="bgContainerA" class="absolute inset-0 bg-cover bg-center bg-slide opacity-100"></div>
+  <div id="bgContainerB" class="absolute inset-0 bg-cover bg-center bg-slide opacity-0"></div>
+
+  <!-- OVERLAY SHADOW GRADIENT -->
+  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none"></div>
+
+  <!-- PARTICLES CANVAS -->
+  <canvas id="sparkleCanvas" class="absolute inset-0 pointer-events-none z-10"></canvas>
+
+  <!-- TOP BAR (UI CONTROLS) -->
+  <div id="topUI" class="fade-ui relative z-30 w-full p-6 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      <span class="text-amber-400 font-festive text-3xl">Shubh Deepawali</span>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button id="lockBtn" class="bg-neutral-900/80 hover:bg-amber-600 px-4 py-2 rounded-xl border border-amber-500/30 text-sm transition backdrop-blur-md">🔒 Lock</button>
+      <button id="fullscreenBtn" class="bg-neutral-900/80 hover:bg-amber-600 px-4 py-2 rounded-xl border border-amber-500/30 text-sm transition backdrop-blur-md">⛶ Fullscreen</button>
+    </div>
+  </div>
+
+  <!-- MAIN CLOCK & DATE CONTAINER -->
+  <div id="centerUI" class="fade-ui relative z-20 flex flex-col items-center justify-center my-auto text-center px-4">
+    <div id="clock" class="font-clock text-7xl sm:text-8xl md:text-9xl font-bold tracking-wider text-amber-100 drop-shadow-[0_4px_25px_rgba(245,158,11,0.6)]">
+      00:00:00
+    </div>
+    <div id="date" class="text-xl sm:text-2xl font-medium text-amber-200/90 mt-2 tracking-widest uppercase drop-shadow-md">
+      Loading date...
+    </div>
+  </div>
+
+  <!-- BOTTOM DIYA ANIMATION -->
+  <div id="bottomUI" class="fade-ui relative z-20 pb-8 flex flex-col items-center">
+    <svg viewBox="0 0 100 60" class="w-16 h-16 drop-shadow-[0_0_15px_rgba(245,158,11,0.8)]">
+      <path d="M50 5 Q56 25 66 32 Q50 28 50 5 Z" fill="#FBBF24" class="diya-flame"/>
+      <path d="M50 12 Q53 25 58 30 Q50 27 50 12 Z" fill="#EF4444" class="diya-flame"/>
+      <path d="M15 35 Q50 60 85 35 Q65 52 35 52 Z" fill="#D97706"/>
+    </svg>
+    <p class="text-xs sm:text-sm text-amber-200/70 tracking-widest uppercase mt-1">May the festival of lights illuminate your home</p>
+  </div>
+
+  <!-- WATERMARK -->
+  <div class="watermark">Made by Rushil Kerai</div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const CORRECT_PIN = "1837";
+    let enteredPin = "";
+
+    function updateDots() {
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`dot${i}`);
+        if (i < enteredPin.length) {
+          dot.classList.add("bg-amber-400");
+        } else {
+          dot.classList.remove("bg-amber-400");
+        }
+      }
+    }
+
+    function pressPin(num) {
+      if (enteredPin.length < 4) {
+        enteredPin += num;
+        updateDots();
+        if (enteredPin.length === 4) {
+          setTimeout(checkPin, 200);
+        }
+      }
+    }
+
+    function clearPin() {
+      enteredPin = "";
+      updateDots();
+      document.getElementById("errorMsg").classList.add("opacity-0");
+    }
+
+    function checkPin() {
+      if (enteredPin === CORRECT_PIN) {
+        document.getElementById("lockScreen").style.display = "none";
+        clearPin();
+      } else {
+        const err = document.getElementById("errorMsg");
+        err.classList.remove("opacity-0");
+        clearPin();
+      }
+    }
+
+    document.getElementById("lockBtn").addEventListener("click", () => {
+      document.getElementById("lockScreen").style.display = "flex";
+    });
+
+    // --- GITHUB REPO IMAGES PLAYLIST (Changes every 20 seconds) ---
+    const playlist = [
+      "20231125_080157.jpg",
+      "20241102_140136.jpg",
+      "IMG-20231113-WA0034.jpg",
+      "images (2).jpg",
+      "images (3).jpg",
+      "images (4).jpg",
+      "images (5).jpg",
+      "pngtree-happy-diwali-background-in-india-with-lantern-decorations-image_427798.jpg"
+    ];
+    
+    let playlistIndex = 0;
+    let activeContainer = 'A';
+
+    const bgA = document.getElementById('bgContainerA');
+    const bgB = document.getElementById('bgContainerB');
+
+    bgA.style.backgroundImage = `url('${playlist[0]}')`;
+
+    // Rotate Photos every 20 seconds
+    setInterval(() => {
+      if (playlist.length <= 1) return;
+      playlistIndex = (playlistIndex + 1) % playlist.length;
+      const nextImg = playlist[playlistIndex];
+
+      if (activeContainer === 'A') {
+        bgB.style.backgroundImage = `url('${nextImg}')`;
+        bgB.style.opacity = '1';
+        bgA.style.opacity = '0';
+        activeContainer = 'B';
+      } else {
+        bgA.style.backgroundImage = `url('${nextImg}')`;
+        bgA.style.opacity = '1';
+        bgB.style.opacity = '0';
+        activeContainer = 'A';
+      }
+    }, 20000);
+
+    // --- REAL-TIME CLOCK ---
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      
+      document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+
+      const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+      document.getElementById('date').textContent = now.toLocaleDateString(undefined, options);
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // --- AUTO HIDE UI ON INACTIVITY ---
+    let uiTimeout;
+    function resetUIRefresh() {
+      document.getElementById('topUI').style.opacity = '1';
+      document.getElementById('bottomUI').style.opacity = '1';
+      clearTimeout(uiTimeout);
+      uiTimeout = setTimeout(() => {
+        document.getElementById('topUI').style.opacity = '0';
+        document.getElementById('bottomUI').style.opacity = '0';
+      }, 5000);
+    }
+    window.addEventListener('mousemove', resetUIRefresh);
+    window.addEventListener('touchstart', resetUIRefresh);
+    resetUIRefresh();
+
+    // --- FULLSCREEN TOGGLE ---
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // --- AMBIENT SPARKLE PARTICLES CANVAS ---
+    const canvas = document.getElementById('sparkleCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height + Math.random() * 20;
+        this.size = Math.random() * 2.5 + 0.5;
+        this.speedY = Math.random() * 1.2 + 0.3;
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.opacity = Math.random() * 0.7 + 0.3;
+      }
+      update() {
+        this.y -= this.speedY;
+        this.x += this.speedX;
+        if (this.y < -10) this.reset();
+      }
+      draw() {
+        ctx.fillStyle = `rgba(251, 191, 36, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    const particles = Array.from({ length: 45 }, () => new Particle());
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.foreach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+  </script>
+</body>
+</html>
