@@ -167,16 +167,12 @@
       document.getElementById("lockScreen").style.display = "flex";
     });
 
-    // --- GITHUB REPO IMAGES PLAYLIST (Changes every 20 seconds) ---
+    // --- PLAYLIST INCLUDING YOUR CHOSEN IMAGE & FAMILY PHOTOS ---
     const playlist = [
+      "https://th.bing.com/th/id/OIP.Lq5dbGrU0SKlXX8xzVkfbgHaEK?w=324&h=182&c=7&r=0&o=7&pid=1.7&rm=3",
       "20231125_080157.jpg",
       "20241102_140136.jpg",
-      "IMG-20231113-WA0034.jpg",
-      "images (2).jpg",
-      "images (3).jpg",
-      "images (4).jpg",
-      "images (5).jpg",
-      "pngtree-happy-diwali-background-in-india-with-lantern-decorations-image_427798.jpg"
+      "IMG-20231113-WA0034.jpg"
     ];
     
     let playlistIndex = 0;
@@ -282,7 +278,7 @@
     const particles = Array.from({ length: 45 }, () => new Particle());
     function animateParticles() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.foreach(p => {
+      particles.forEach(p => {
         p.update();
         p.draw();
       });
